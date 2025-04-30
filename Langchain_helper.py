@@ -2,7 +2,7 @@ from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chains import SequentialChain
-from secret_key import groq_cloud_api
+from config import groq_cloud_api
 
 import os
 os.environ["GROQ_API_KEY"] = groq_cloud_api
@@ -32,12 +32,21 @@ def generate_restaurant_name_and_items(cuisine):
         )
     )
     items_chain = LLMChain(llm=llm, prompt=prompt_template_items, output_key="menu_items")
+    
+    
+    prompt_template_tagline=PromptTemplate(
+        input_variables=["restaurant_name", "cuisine"],
+        template=("Generate a catchy, creative tagline for a restaurant named {restaurant_name} "
+            "that specializes in {cuisine} cuisine. Keep it short and impactful. Return only the one tagline without any explanation.")
+    )
+    
+    tagline_chain=LLMChain(llm=llm, prompt=prompt_template_tagline,output_key="tagline")
 
     # SequentialChain
     chain = SequentialChain(
-        chains=[name_chain, items_chain],
+        chains=[name_chain, items_chain,tagline_chain],
         input_variables=["cuisine"],
-        output_variables=["restaurant_name", "menu_items"],
+        output_variables=["restaurant_name", "menu_items","tagline"],
         verbose=False
     )
 

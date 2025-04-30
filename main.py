@@ -7,7 +7,7 @@ st.title("Restaurant Name Generator")
 # Sidebar cuisine selector
 cuisine = st.sidebar.selectbox(
     "Select a cuisine type:",
-    ("Pakistani", "Italian", "Chinese", "Indian", "Mexican","American")
+    ("Pakistani", "Italian", "Chinese", "Indian", "Mexican","American","Qatari","Turkish","Russian","French")
 )
 
 # Generate Button
@@ -16,6 +16,8 @@ if st.button("Generate Suggestions"):
 
     # Display the restaurant name
     st.header(f"🏷️ {response['restaurant_name'].strip()}")
+    
+    st.subheader(f"Tagline: {response['tagline'].strip()}")
 
     # Process and show menu items
     menu_items = [item.strip() for item in response['menu_items'].split(",") if item.strip()]

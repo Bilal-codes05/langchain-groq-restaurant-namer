@@ -1,6 +1,7 @@
 # ignore secret key
-secret_key.py
+.env
 
 # ignore __pycache__ folders
 __pycache__/
 *.pyc
+
