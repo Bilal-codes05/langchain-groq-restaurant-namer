@@ -1,0 +1,6 @@
+# ignore secret key
+secret_key.py
+
+# ignore __pycache__ folders
+__pycache__/
+*.pyc
