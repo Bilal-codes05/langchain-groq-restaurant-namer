@@ -4,6 +4,8 @@ from langchain.chains import LLMChain
 from langchain.chains import SequentialChain
 from config import groq_cloud_api
 
+
+
 import os
 os.environ["GROQ_API_KEY"] = groq_cloud_api
 
@@ -12,7 +14,7 @@ llm = ChatGroq(
     model_name="llama3-8b-8192"
 )
 
-def generate_restaurant_name_and_items(cuisine):
+def generate_restaurant_name_and_items_and_tagline(cuisine):
     # More creative and contextual name generation
     prompt_template_name = PromptTemplate(
         input_variables=["cuisine"],
@@ -54,4 +56,4 @@ def generate_restaurant_name_and_items(cuisine):
     return response
 
 if __name__ == "__main__":
-    print(generate_restaurant_name_and_items("Pakistani"))
+    print(generate_restaurant_name_and_items_and_tagline("Pakistani"))

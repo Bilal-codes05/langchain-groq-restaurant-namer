@@ -12,7 +12,7 @@ cuisine = st.sidebar.selectbox(
 
 # Generate Button
 if st.button("Generate Suggestions"):
-    response = Langchain_helper.generate_restaurant_name_and_items(cuisine)
+    response = Langchain_helper.generate_restaurant_name_and_items_and_tagline(cuisine)
 
     # Display the restaurant name
     st.header(f"🏷️ {response['restaurant_name'].strip()}")
