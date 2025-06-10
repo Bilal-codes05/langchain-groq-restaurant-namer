@@ -49,5 +49,6 @@ Menu:
             "tagline": "",
             "menu_items": [],
             "error": f"Parsing failed: {str(e)}",
-            "raw_response": response
+            "raw_response": response,
+           
         }
