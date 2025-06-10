@@ -1,59 +1,53 @@
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from langchain.chains import SequentialChain
 from config import groq_cloud_api
 
-
-
-import os
-os.environ["GROQ_API_KEY"] = groq_cloud_api
-
 llm = ChatGroq(
-    temperature=0.8,  # Increased for more creativity
-    model_name="llama3-8b-8192"
+    model_name="llama3-8b-8192",
+    api_key=groq_cloud_api
 )
 
-def generate_restaurant_name_and_items_and_tagline(cuisine):
-    # More creative and contextual name generation
-    prompt_template_name = PromptTemplate(
-        input_variables=["cuisine"],
-        template=(
-            "You're a branding expert. Suggest a unique and creative restaurant name for a restaurant "
-            "that specializes in {cuisine} cuisine. Return only the name without any explanation."
-        )
-    )
-    name_chain = LLMChain(llm=llm, prompt=prompt_template_name, output_key="restaurant_name")
+def generate_restaurant_name_and_items_and_tagline(cuisine: str, theme: str) -> dict:
+    prompt = PromptTemplate(
+        input_variables=["cuisine", "theme"],
+        template="""
+You are a creative AI assistant. Generate a restaurant name, a catchy tagline, and a simple list of 6 traditional menu items (one per line, no descriptions), based on the following:
 
-    # Menu items prompt grounded in both name and cuisine
-    prompt_template_items = PromptTemplate(
-        input_variables=["restaurant_name", "cuisine"],
-        template=(
-            "Suggest exactly 5 popular traditional food items served at a restaurant named {restaurant_name} "
-            "that specializes in {cuisine} cuisine. Return only the list as comma-separated values without any explanations."
-        )
-    )
-    items_chain = LLMChain(llm=llm, prompt=prompt_template_items, output_key="menu_items")
-    
-    
-    prompt_template_tagline=PromptTemplate(
-        input_variables=["restaurant_name", "cuisine"],
-        template=("Generate a catchy, creative tagline for a restaurant named {restaurant_name} "
-            "that specializes in {cuisine} cuisine. Keep it short and impactful. Return only the one tagline without any explanation.")
-    )
-    
-    tagline_chain=LLMChain(llm=llm, prompt=prompt_template_tagline,output_key="tagline")
+Cuisine: {cuisine}
+Theme: {theme}
 
-    # SequentialChain
-    chain = SequentialChain(
-        chains=[name_chain, items_chain,tagline_chain],
-        input_variables=["cuisine"],
-        output_variables=["restaurant_name", "menu_items","tagline"],
-        verbose=False
+Respond in this exact format:
+Restaurant Name: <name>
+Tagline: <tagline>
+Menu:
+- item1
+- item2
+- item3
+- item4
+- item5
+- item6
+"""
     )
 
-    response = chain({"cuisine": cuisine})
-    return response
+    chain = LLMChain(llm=llm, prompt=prompt)
+    response = chain.run({"cuisine": cuisine, "theme": theme})
 
-if __name__ == "__main__":
-    print(generate_restaurant_name_and_items_and_tagline("Pakistani"))
+    try:
+        name = response.split("Restaurant Name:")[1].split("Tagline:")[0].strip()
+        tagline = response.split("Tagline:")[1].split("Menu:")[0].strip()
+        menu_raw = response.split("Menu:")[1].strip()
+        menu_items = [line.strip().lstrip("- ").strip() for line in menu_raw.split("\n") if line.strip()]
+        return {
+            "restaurant_name": name,
+            "tagline": tagline,
+            "menu_items": menu_items
+        }
+    except Exception as e:
+        return {
+            "restaurant_name": "",
+            "tagline": "",
+            "menu_items": [],
+            "error": f"Parsing failed: {str(e)}",
+            "raw_response": response
+        }

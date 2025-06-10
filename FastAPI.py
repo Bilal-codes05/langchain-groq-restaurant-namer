@@ -15,12 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory storage
+# In-memory store
 restaurants: Dict[str, dict] = {}
 
+# Request model
 class CuisineRequest(BaseModel):
     cuisine: str
+    theme: str
 
+# Restaurant models
 class Restaurant(BaseModel):
     restaurant_name: str
     menu_items: List[str]
@@ -29,25 +32,30 @@ class Restaurant(BaseModel):
 class RestaurantWithID(Restaurant):
     id: str
 
-# POST - Create/generate
+# POST - Generate a new restaurant
 @app.post("/generate", response_model=RestaurantWithID)
 def generate_restaurant(cuisine_data: CuisineRequest):
-    result = generate_restaurant_name_and_items_and_tagline(cuisine_data.cuisine)
+    result = generate_restaurant_name_and_items_and_tagline(
+        cuisine_data.cuisine,
+        cuisine_data.theme
+    )
+
     restaurant_id = str(uuid4())
     restaurant = {
         "restaurant_name": result["restaurant_name"],
-        "menu_items": result["menu_items"].split(", "),
+        "menu_items": result["menu_items"],
         "tagline": result["tagline"]
     }
+
     restaurants[restaurant_id] = restaurant
     return {**restaurant, "id": restaurant_id}
 
-# GET - All restaurants
+# GET - List all restaurants
 @app.get("/restaurants", response_model=List[RestaurantWithID])
 def get_all_restaurants():
     return [{**restaurant, "id": rid} for rid, restaurant in restaurants.items()]
 
-# GET - By name
+# GET - Find by name
 @app.get("/restaurants/by-name/{restaurant_name}", response_model=List[RestaurantWithID])
 def get_restaurants_by_name(restaurant_name: str):
     search_name = restaurant_name.strip().lower().replace('"', '')
@@ -60,7 +68,7 @@ def get_restaurants_by_name(restaurant_name: str):
         raise HTTPException(status_code=404, detail="Restaurant not found")
     return matches
 
-# PUT - Update
+# PUT - Update restaurant
 @app.put("/restaurants/{restaurant_id}", response_model=RestaurantWithID)
 def update_restaurant(restaurant_id: str, updated_data: Restaurant):
     if restaurant_id not in restaurants:
@@ -68,10 +76,10 @@ def update_restaurant(restaurant_id: str, updated_data: Restaurant):
     restaurants[restaurant_id] = updated_data.dict()
     return {**updated_data.dict(), "id": restaurant_id}
 
-# DELETE - Delete
+# DELETE - Remove restaurant
 @app.delete("/restaurants/{restaurant_id}")
 def delete_restaurant(restaurant_id: str):
     if restaurant_id not in restaurants:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     del restaurants[restaurant_id]
-    return {"detail": "Restaurant deleted"}
+    return {"detail": "Restaurant deleted successfully"}
